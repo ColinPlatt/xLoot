@@ -87,7 +87,7 @@ contract PlatinumDistributor is Context, Ownable, ReentrancyGuard, ERC721Holder 
         season += 1;
     }
 
-    function claimSingle(address contractERC721, uint256 tokenId) external {
+    function claimSingle(address contractERC721, uint256 tokenId) external nonReentrant {
         DistributablePool storage eligibleNFTData = distributablePools[contractERC721];
         
         // check that the token has not claimed previously
@@ -110,7 +110,7 @@ contract PlatinumDistributor is Context, Ownable, ReentrancyGuard, ERC721Holder 
 
     }
 
-    function claimMulti(address contractERC721, uint256[] memory tokenId) external {
+    function claimMulti(address contractERC721, uint256[] memory tokenId) external nonReentrant {
         DistributablePool storage eligibleNFTData = distributablePools[contractERC721];
         
         // check that contract is in struct
