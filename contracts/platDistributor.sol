@@ -69,8 +69,6 @@ contract PlatinumDistributor is Context, Ownable, ReentrancyGuard, ERC721Holder 
 
     }
 
-    
-    
     function addDistributableContract(address _eligibleERC721, uint256 _lBoundId, uint256 _uBoundId, uint256 _tokenPerNFT, bool _burnForDistribution) external onlyOwner {
         require(IERC721(_eligibleERC721).supportsInterface(0x80ac58cd), "This does not appear to be a valid ERC721 contract");
 
@@ -83,6 +81,10 @@ contract PlatinumDistributor is Context, Ownable, ReentrancyGuard, ERC721Holder 
             }
         );
 
+    }
+
+    function iterateSeason() external onlyOwner {
+        season += 1;
     }
 
     function claimSingle(address contractERC721, uint256 tokenId) external {
@@ -105,6 +107,33 @@ contract PlatinumDistributor is Context, Ownable, ReentrancyGuard, ERC721Holder 
         require(_msgSender() == IERC721Enumerable(contractERC721).ownerOf(tokenId), "The caller is not the owner of this token");
         
         _claim(contractERC721, tokenId, _msgSender(), eligibleNFTData.tokenPerNFT, eligibleNFTData.burnForDistribution);
+
+    }
+
+    function claimMulti(address contractERC721, uint256[] memory tokenId) external {
+        DistributablePool storage eligibleNFTData = distributablePools[contractERC721];
+        
+        // check that contract is in struct
+        require(eligibleNFTData.tokenPerNFT > 0, "This NFT is not eligible for distribution");
+
+        uint256 _tempUBoundId = eligibleNFTData.uBoundId;
+            if (eligibleNFTData.uBoundId == 0){
+                _tempUBoundId = IERC721Enumerable(contractERC721).totalSupply();
+        }
+
+        for (uint256 i = 0; i < tokenId.length; i++) {
+
+            // check that the token has not claimed previously
+            require(!claimedByTokenId[season][contractERC721][tokenId[i]], "This NFT has already claimed its distribution");
+
+            // check that id is in range
+            require(eligibleNFTData.lBoundId <= tokenId[i] && _tempUBoundId >= tokenId[i], "This NFT is not in range");
+
+            // check that owner has token
+            require(_msgSender() == IERC721Enumerable(contractERC721).ownerOf(tokenId[i]), "The caller is not the owner of this token");
+            
+            _claim(contractERC721, tokenId[i], _msgSender(), eligibleNFTData.tokenPerNFT, eligibleNFTData.burnForDistribution);
+        }
 
     }
 

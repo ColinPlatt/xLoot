@@ -104,9 +104,7 @@ describe("We should be able to deploy and initiate the contracts", function() {
 
   it("It should allow an eligible ERC721 holder to claim a burn", async function() {
     await distributor.addDistributableContract(Loot.address, 1, 8000, 100, true);
-
     await Loot.connect(carol).setApprovalForAll(distributor.address, true);
-
     await distributor.connect(carol).claimSingle(Loot.address, 1);
 
     expect(await platinum.balanceOf(carol.address)).to.equal(100);
@@ -118,19 +116,28 @@ describe("We should be able to deploy and initiate the contracts", function() {
     await expect(distributor.connect(carol).claimSingle(Loot.address, 1)).to.be.revertedWith("This NFT is not eligible for distribution");
 
     xLoot.connect(carol).claim(8012);
-
     await expect(distributor.connect(alice).claimSingle(xLoot.address, 8012)).to.revertedWith("The caller is not the owner of this token");
 
     await distributor.addDistributableContract(Loot.address, 1, 1, 100, false);
-
     await expect(distributor.connect(carol).claimSingle(Loot.address, 2)).to.revertedWith("This NFT is not in range");
-
+    
     await distributor.connect(alice).claimSingle(xLoot.address, 8001);
-
     expect(await platinum.balanceOf(alice.address)).to.equal(100);
-
     await expect(distributor.connect(alice).claimSingle(xLoot.address, 8001)).to.revertedWith("This NFT has already claimed its distribution");
 
+  });
+
+  it("It should allow an eligible ERC721 holder to do multi claims", async function() {
+    await distributor.connect(alice).claimMulti(xLoot.address, [8001,8002,8003]);
+
+    expect(await platinum.balanceOf(alice.address)).to.equal(300);
+
+    await distributor.addDistributableContract(Loot.address, 1, 8000, 100, true);
+    await Loot.connect(carol).setApprovalForAll(distributor.address, true);
+    await distributor.connect(carol).claimMulti(Loot.address, [1,2,3,4]);
+
+    expect(await platinum.balanceOf(carol.address)).to.equal(400);
+    expect(await Loot.balanceOf(carol.address)).to.equal(6);
   });
 
 

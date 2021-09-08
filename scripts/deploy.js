@@ -8,10 +8,10 @@ async function main() {
     console.log("Account balance:", (await deployer.getBalance()).toString());
     
     // We get the contract to deploy   
-    const mLootContract = await ethers.getContractFactory("TemporalLoot");
-    const mLoot = await mLootContract.deploy();
+    const xLootContract = await ethers.getContractFactory("extensionLoot");
+    const xLoot = await xLootContract.deploy();
   
-    console.log("mLoot deployed to:", mLoot.address);
+    console.log("xLoot deployed to:", xLoot.address);
   }
   
   main()
