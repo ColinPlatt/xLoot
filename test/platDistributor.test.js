@@ -140,8 +140,65 @@ describe("We should be able to deploy and initiate the contracts", function() {
     expect(await Loot.balanceOf(carol.address)).to.equal(6);
   });
 
+  it("It should allow the owner to increment seasons", async function() {
 
+    expect(await distributor.season()).to.equal(0);
 
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(1);
+
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(2);
+
+  });
+
+  it("It should allow an eligible ERC721 holder to claim without a burn in each season", async function() {
+    await distributor.connect(alice).claimSingle(xLoot.address, 8001);
+
+    expect(await distributor.season()).to.equal(0);
+    expect(await platinum.balanceOf(alice.address)).to.equal(100);
+
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(1);
+
+    await distributor.connect(alice).claimSingle(xLoot.address, 8001);
+    expect(await platinum.balanceOf(alice.address)).to.equal(200);
+
+  });
+
+  it("It should allow an eligible ERC721 holder to only claim in this season", async function() {
+
+    expect(await distributor.season()).to.equal(0);
+    expect(await platinum.balanceOf(alice.address)).to.equal(0);
+
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(1);
+
+    await distributor.connect(alice).claimSingle(xLoot.address, 8001);
+    expect(await platinum.balanceOf(alice.address)).to.equal(100);
+    await expect(distributor.connect(alice).claimSingle(xLoot.address, 8001)).to.revertedWith("This NFT has already claimed its distribution");
+
+  });
+
+  it("It should allow an eligible ERC721 holder to only claim in this season when a new distributableContract is added", async function() {
+
+    expect(await distributor.season()).to.equal(0);
+    expect(await platinum.balanceOf(alice.address)).to.equal(0);
+
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(1);
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(2);
+    await distributor.iterateSeason();
+    expect(await distributor.season()).to.equal(3);
+
+    await distributor.addDistributableContract(Loot.address, 1, 8000, 100, false);
+
+    await distributor.connect(carol).claimSingle(Loot.address, 1);
+    expect(await platinum.balanceOf(carol.address)).to.equal(100);
+    await expect(distributor.connect(carol).claimSingle(Loot.address, 1)).to.revertedWith("This NFT has already claimed its distribution");
+
+  });
 
 
 
